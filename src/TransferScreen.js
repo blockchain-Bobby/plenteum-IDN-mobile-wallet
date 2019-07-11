@@ -11,8 +11,6 @@ import QRCodeScanner from 'react-native-qrcode-scanner';
 
 import TextTicker from 'react-native-text-ticker';
 
-import * as Qs from 'query-string';
-
 import HeaderButtons, { HeaderButton, Item } from 'react-navigation-header-buttons';
 
 import { HeaderBackButton, StackActions } from 'react-navigation';
@@ -36,7 +34,11 @@ import { Styles } from './Styles';
 import { Globals } from './Globals';
 import { Hr, BottomButton } from './SharedComponents';
 import { removeFee, toAtomic, fromAtomic, addFee } from './Fee';
-import { getArrivalTime, navigateWithDisabledBack, delay, toastPopUp } from './Utilities';
+
+import {
+    getArrivalTime, navigateWithDisabledBack, delay, toastPopUp, handleURI,
+    validAmount,
+} from './Utilities';
 
 export class QrScannerScreen extends React.Component {
     constructor(props) {
@@ -45,7 +47,7 @@ export class QrScannerScreen extends React.Component {
 
     render() {
         return(
-            <View style={{ flex: 1 }}>
+            <View style={{ flex: 1, backgroundColor: this.props.screenProps.theme.backgroundColour }}>
                 <QRCodeScanner
                     onRead={(code) => {
                         this.props.navigation.goBack();
@@ -125,35 +127,6 @@ class CrossButton extends React.Component {
             </HeaderButtons>
         );
     }
-}
-
-function validAmount(amount, unlockedBalance) {
-    if (amount === '' || amount === undefined || amount === null) {
-        return [false, ''];
-    }
-
-    /* Remove commas in input */
-    amount = amount.replace(/,/g, '');
-
-    let numAmount = Number(amount);
-
-    if (isNaN(numAmount)) {
-        return [false, 'Amount is not a number!'];
-    }
-
-    /* Remove fractional component and convert to atomic */
-    numAmount = Math.floor(toAtomic(numAmount));
-
-    /* Must be above min send */
-    if (numAmount < 1) {
-        return [false, 'Amount is below minimum send!'];
-    }
-
-    if (numAmount > unlockedBalance) {
-        return [false, 'Not enough funds available!'];
-    }
-
-    return [true, ''];
 }
 
 /**
@@ -517,7 +490,7 @@ export class NewPayeeScreen extends React.Component {
             });
         }
 
-        const addressError = validateAddresses([address], true);
+        const addressError = validateAddresses([address], true, Config);
 
         if (addressError.errorCode !== WalletErrorCode.SUCCESS) {
             errorMessage = addressError.toString();
@@ -753,6 +726,39 @@ export class NewPayeeScreen extends React.Component {
     }
 }
 
+class ModifyMemo extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+
+    render() {
+        return(
+            <Input
+                containerStyle={{
+                    width: '100%',
+                }}
+                inputContainerStyle={{
+                    borderColor: this.props.screenProps.theme.notVeryVisibleColour,
+                    borderWidth: 1,
+                    borderRadius: 2,
+                    width: '100%',
+                    height: 30,
+                }}
+                inputStyle={{
+                    color: this.props.screenProps.theme.primaryColour,
+                    fontSize: 14,
+                }}
+                value={this.props.memo}
+                onChangeText={(text) => {
+                    if (this.props.onChange) {
+                        this.props.onChange(text);
+                    }
+                }}
+            />
+        );
+    }
+}
+
 export class ConfirmScreen extends React.Component {
     static navigationOptions = ({ navigation }) => {
         return {
@@ -764,6 +770,11 @@ export class ConfirmScreen extends React.Component {
 
     constructor(props) {
         super(props);
+
+        this.state = {
+            memo: '',
+            modifyMemo: false,
+        }
     }
 
     render() {
@@ -781,154 +792,222 @@ export class ConfirmScreen extends React.Component {
                 </View>
 
                 <ScrollView contentContainerStyle={{
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    marginHorizontal: 30,
                     paddingBottom: 70,
                 }}>
-                    <Text style={{ fontSize: 13, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                        <Text style={{ color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
-                            {prettyPrintAmount(this.props.navigation.state.params.amount.remainingAtomic)}{' '}
-                        </Text>
-                        will reach{' '}
-                        <Text style={{ color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
-                            {this.props.navigation.state.params.payee.nickname}'s{' '}
-                        </Text>
-                        account, in {getArrivalTime()}
-                    </Text>
-
                     <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginTop: 15,
-                        width: '100%',
-                        justifyContent: 'space-between'
+                        marginHorizontal: 30,
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
                     }}>
-                        <Text style={{ fontSize: 15, color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
-                            {this.props.navigation.state.params.payee.nickname}'s details
+                        <Text style={{ fontSize: 13, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
+                            <Text style={{ color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
+                                {prettyPrintAmount(this.props.navigation.state.params.amount.remainingAtomic, Config)}{' '}
+                            </Text>
+                            will reach{' '}
+                            <Text style={{ color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
+                                {this.props.navigation.state.params.payee.nickname}'s{' '}
+                            </Text>
+                            account, in {getArrivalTime()}
                         </Text>
 
-                        <Button
-                            title='Change'
-                            onPress={() => {
-                                this.props.navigation.navigate('ChoosePayee');
-                            }}
-                            titleStyle={{
-                                color: this.props.screenProps.theme.primaryColour,
-                                fontSize: 13
-                            }}
-                            type="clear"
-                        />
+                        <View style={{
+                            alignItems: 'flex-start',
+                            justifyContent: 'flex-start',
+                        }}>
+                            <View style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                marginTop: 15,
+                                width: '100%',
+                                justifyContent: 'space-between'
+                            }}>
+                                <Text style={{
+                                    color: this.props.screenProps.theme.primaryColour,
+                                    fontWeight: 'bold',
+                                }}>
+                                    Notes
+                                </Text>
+
+                                <Button
+                                    title='Change'
+                                    onPress={() => {
+                                        this.setState({
+                                            modifyMemo: !this.state.modifyMemo,
+                                        });
+                                    }}
+                                    titleStyle={{
+                                        color: this.props.screenProps.theme.primaryColour,
+                                        fontSize: 13
+                                    }}
+                                    type="clear"
+                                />
+                            </View>
+                        </View>
+
+                        <View style={{ borderWidth: 0.7, borderColor: 'lightgrey', width: '100%' }}/>
                     </View>
 
-                    <View style={{ borderWidth: 0.5, borderColor: 'lightgrey', width: '100%' }}/>
-
-                    <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                        Address
-                    </Text>
-
-                    <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                        {this.props.navigation.state.params.payee.address}
-                    </Text>
-
-                    {this.props.navigation.state.params.payee.paymentID !== '' &&
-                    <View>
-                        <Text style={{ marginBottom: 5, marginTop: 20 }}>
-                            Payment ID
-                        </Text>
-
-                        <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                            {this.props.navigation.state.params.payee.paymentID}
-                        </Text>
-                    </View>}
-
                     <View style={{
-                        flexDirection: 'row',
-                        alignItems: 'center',
-                        marginTop: 15,
-                        width: '100%',
-                        justifyContent: 'space-between'
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
+                        marginHorizontal: this.state.modifyMemo ? 20 : 30,
+                        marginTop: 20,
                     }}>
-                        <Text style={{ fontSize: 15, color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
-                            Transfer details
-                        </Text>
-
-                        <Button
-                            title='Change'
-                            onPress={() => {
-                                this.props.navigation.navigate(
-                                    'Transfer', {
-                                        payee: this.props.navigation.state.params.payee,
-                                    }
-                                );
-                            }}
-                            titleStyle={{
-                                color: this.props.screenProps.theme.primaryColour,
-                                fontSize: 13
-                            }}
-                            type="clear"
-                        />
+                        {this.state.modifyMemo ? 
+                            <ModifyMemo
+                                memo={this.state.memo}
+                                onChange={(text) => {
+                                    this.setState({
+                                        memo: text,
+                                    })
+                                }}
+                                {...this.props}
+                            />
+                            : 
+                            <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
+                                {this.state.memo === '' ? 'None' : this.state.memo}
+                            </Text>
+                        }
                     </View>
 
-                    <View style={{ borderWidth: 0.5, borderColor: 'lightgrey', width: '100%' }}/>
+                    <View style={{
+                        marginHorizontal: 30,
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
+                    }}>
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginTop: 15,
+                            width: '100%',
+                            justifyContent: 'space-between'
+                        }}>
+                            <Text style={{ fontSize: 15, color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
+                                {this.props.navigation.state.params.payee.nickname}'s details
+                            </Text>
 
-                    <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                        You're sending
-                    </Text>
+                            <Button
+                                title='Change'
+                                onPress={() => {
+                                    this.props.navigation.navigate('ChoosePayee');
+                                }}
+                                titleStyle={{
+                                    color: this.props.screenProps.theme.primaryColour,
+                                    fontSize: 13
+                                }}
+                                type="clear"
+                            />
+                        </View>
 
-                    <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                        {prettyPrintAmount(this.props.navigation.state.params.amount.originalAtomic)}
-                    </Text>
+                        <View style={{ borderWidth: 0.7, borderColor: 'lightgrey', width: '100%' }}/>
 
-                    <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                        {this.props.navigation.state.params.payee.nickname} gets
-                    </Text>
-
-                    <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                        {prettyPrintAmount(this.props.navigation.state.params.amount.remainingAtomic)}
-                    </Text>
-
-                    <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                        Network fee
-                    </Text>
-
-                    <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                        {prettyPrintAmount(this.props.navigation.state.params.amount.networkFeeAtomic)}
-                    </Text>
-
-                    {this.props.navigation.state.params.amount.devFeeAtomic > 0 &&
-                    <View>
                         <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                            Developer fee
+                            Address
                         </Text>
 
                         <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                            {prettyPrintAmount(this.props.navigation.state.params.amount.devFeeAtomic)}
+                            {this.props.navigation.state.params.payee.address}
                         </Text>
-                    </View>}
 
-                    {this.props.navigation.state.params.amount.nodeFeeAtomic > 0 &&
-                    <View>
+                        {this.props.navigation.state.params.payee.paymentID !== '' &&
+                        <View>
+                            <Text style={{ marginBottom: 5, marginTop: 20 }}>
+                                Payment ID
+                            </Text>
+
+                            <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
+                                {this.props.navigation.state.params.payee.paymentID}
+                            </Text>
+                        </View>}
+
+                        <View style={{
+                            flexDirection: 'row',
+                            alignItems: 'center',
+                            marginTop: 15,
+                            width: '100%',
+                            justifyContent: 'space-between'
+                        }}>
+                            <Text style={{ fontSize: 15, color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
+                                Transfer details
+                            </Text>
+
+                            <Button
+                                title='Change'
+                                onPress={() => {
+                                    this.props.navigation.navigate(
+                                        'Transfer', {
+                                            payee: this.props.navigation.state.params.payee,
+                                        }
+                                    );
+                                }}
+                                titleStyle={{
+                                    color: this.props.screenProps.theme.primaryColour,
+                                    fontSize: 13
+                                }}
+                                type="clear"
+                            />
+                        </View>
+
+                        <View style={{ borderWidth: 0.7, borderColor: 'lightgrey', width: '100%' }}/>
+
                         <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                            Node fee
+                            You're sending
                         </Text>
 
                         <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                            {prettyPrintAmount(this.props.navigation.state.params.amount.nodeFeeAtomic)}
+                            {prettyPrintAmount(this.props.navigation.state.params.amount.originalAtomic, Config)}
                         </Text>
-                    </View>}
 
-                    {this.props.navigation.state.params.amount.totalFeeAtomic > this.props.navigation.state.params.amount.networkFeeAtomic &&
-                    <View>
                         <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
-                            Total fee
+                            {this.props.navigation.state.params.payee.nickname} gets
                         </Text>
 
                         <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
-                            {prettyPrintAmount(this.props.navigation.state.params.amount.totalFeeAtomic)}
+                            {prettyPrintAmount(this.props.navigation.state.params.amount.remainingAtomic, Config)}
                         </Text>
-                    </View>}
 
+                        <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
+                            Network fee
+                        </Text>
+
+                        <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
+                            {prettyPrintAmount(this.props.navigation.state.params.amount.networkFeeAtomic, Config)}
+                        </Text>
+
+                        {this.props.navigation.state.params.amount.devFeeAtomic > 0 &&
+                        <View>
+                            <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
+                                Developer fee
+                            </Text>
+
+                            <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
+                                {prettyPrintAmount(this.props.navigation.state.params.amount.devFeeAtomic, Config)}
+                            </Text>
+                        </View>}
+
+                        {this.props.navigation.state.params.amount.nodeFeeAtomic > 0 &&
+                        <View>
+                            <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
+                                Node fee
+                            </Text>
+
+                            <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
+                                {prettyPrintAmount(this.props.navigation.state.params.amount.nodeFeeAtomic, Config)}
+                            </Text>
+                        </View>}
+
+                        {this.props.navigation.state.params.amount.totalFeeAtomic > this.props.navigation.state.params.amount.networkFeeAtomic &&
+                        <View>
+                            <Text style={{ marginBottom: 5, marginTop: 20, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
+                                Total fee
+                            </Text>
+
+                            <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 16 }}>
+                                {prettyPrintAmount(this.props.navigation.state.params.amount.totalFeeAtomic, Config)}
+                            </Text>
+                        </View>}
+
+                    </View>
                 </ScrollView>
 
                 <BottomButton
@@ -939,6 +1018,7 @@ export class ConfirmScreen extends React.Component {
                             address: this.props.navigation.state.params.payee.address,
                             paymentID: this.props.navigation.state.params.payee.paymentID,
                             nickname: this.props.navigation.state.params.payee.nickname,
+                            memo: this.state.memo,
                         };
 
                         if (Globals.preferences.pinConfirmation) {
@@ -984,163 +1064,6 @@ export class ChoosePayeeScreen extends React.Component {
         }
     };
 
-    handleQrCode(qrData, navigation) {
-        const error = this.parseQrCodeData(qrData, navigation);
-
-        if (error) {
-            Alert.alert(
-                'Cannot send transaction',
-                error,
-                [
-                    {text: 'OK'},
-                ]
-            );
-        }
-    }
-
-    parseQrCodeData(qrData, navigation) {
-        /* It's a URI, try and get the data from it */
-        if (qrData.startsWith(Config.uriPrefix)) {
-            /* Remove the turtlecoin:// prefix */
-            let data = qrData.replace(Config.uriPrefix, '');
-
-            const index = data.indexOf('?');
-
-            /* Not valid URI */
-            if (index === -1) {
-                index = data.length;
-            }
-
-            const address = data.substr(0, index);
-            const params = Qs.parse(data.substr(index));
-
-            const amount = params.amount;
-            const name = params.name;
-            let paymentID = params.paymentid;
-
-            if (paymentID) {
-                const pidError = validatePaymentID(paymentID);
-
-                /* Payment ID isn't valid. */
-                if (pidError.errorCode !== WalletErrorCode.SUCCESS) {
-                    return 'QR code is not valid!';
-                }
-
-                /* Both integrated address and payment ID given */
-                if (address.length === Config.integratedAddressLength && paymentID.length !== 0) {
-                    return 'QR code is not valid!';
-                }
-            }
-
-            const addressError = validateAddresses([address], true);
-
-            /* Address isn't valid */
-            if (addressError.errorCode !== WalletErrorCode.SUCCESS) {
-                return 'QR code is not valid!';
-            }
-
-            const amountAtomic = Number(amount);
-            let feeInfo = undefined;
-            let amountNonAtomic = undefined;
-
-            if (!isNaN(amountAtomic)) {
-                amountNonAtomic = amountAtomic / (10 ** Config.decimalPlaces);
-
-                /* Got an amount, can go straight to confirmation, if we have enough balance */
-                const [unlockedBalance, lockedBalance] = Globals.wallet.getBalance();
-
-                feeInfo = addFee(amountNonAtomic);
-
-                let [valid, error] = validAmount(feeInfo.original, unlockedBalance);
-
-                if (feeInfo.originalAtomic > unlockedBalance) {
-                    error = 'Not enough funds available! Needed (including fees): ' +
-                            `${prettyPrintAmount(feeInfo.originalAtomic)}, Available: ` +
-                            prettyPrintAmount(unlockedBalance);
-                }
-
-                if (!valid) {
-                    return error;
-                }
-            }
-            
-            /* No name, need to pick one.. */
-            if (!name) {
-                navigation.navigate(
-                    'NewPayee', {
-                        paymentID: paymentID || '',
-                        address,
-                        amount: amountNonAtomic ? amountNonAtomic.toString() : undefined,
-                    }
-                );
-
-                return undefined;
-            }
-
-            const newPayee = {
-                nickname: name,
-                address: address,
-                paymentID: paymentID || '',
-            }
-
-            const existingPayee = Globals.payees.find((p) => p.nickname === name);
-            
-            /* Payee exists already */
-            if (existingPayee) {
-                /* New payee doesn't match existing payee, get them to enter a new name */
-                if (existingPayee.address !== newPayee.address ||
-                    existingPayee.paymentID !== newPayee.paymentID) { 
-                    navigation.navigate(
-                        'NewPayee', {
-                            paymentID: paymentID || '',
-                            address,
-                            amount: amountNonAtomic.toString(),
-                        }
-                    );
-
-                    return undefined;
-                }
-            /* Save payee to database for later use */
-            } else {
-                Globals.addPayee(newPayee);
-            }
-
-            if (!amount) {
-                navigation.navigate(
-                    'Transfer', {
-                        payee: newPayee,
-                    }
-                );
-
-                return undefined;
-            } else {
-                navigation.navigate(
-                    'Confirm', {
-                        payee: newPayee,
-                        amount: feeInfo,
-                    }
-                );
-            }
-        /* It's a standard address, try and parse it (or something else) */
-        } else {
-            const addressError = validateAddresses([qrData], true);
-
-            if (addressError.errorCode !== WalletErrorCode.SUCCESS) {
-                return 'QR code is not valid!';
-            }
-
-            navigation.navigate(
-                'NewPayee', {
-                    address: qrData,
-                }
-            );
-
-            return undefined;
-        }
-
-        return undefined;
-    }
-
     render() {
         return(
             <View style={{
@@ -1168,7 +1091,7 @@ export class ChoosePayeeScreen extends React.Component {
                         title='Scan QR Code'
                         onPress={() => {
                             const func = (data) => {
-                                this.handleQrCode(data, this.props.navigation);
+                                handleURI(data, this.props.navigation);
                             };
 
                             this.props.navigation.navigate('QrScanner', {
@@ -1250,6 +1173,7 @@ export class SendTransactionScreen extends React.Component {
             address: this.props.navigation.state.params.address,
             paymentID: this.props.navigation.state.params.paymentID,
             nickname: this.props.navigation.state.params.nickname,
+            memo: this.props.navigation.state.params.memo,
             homeEnabled: false,
         }
 
@@ -1286,6 +1210,13 @@ export class SendTransactionScreen extends React.Component {
             this.setState({
                 hash,
                 homeEnabled: true,
+            });
+
+            Globals.addTransactionDetails({
+                hash: hash,
+                memo: this.state.memo,
+                address: this.state.address,
+                payee: this.state.nickname,
             });
         }
     }
@@ -1330,7 +1261,7 @@ export class SendTransactionScreen extends React.Component {
 
                 <Text style={{ fontSize: 13, color: this.props.screenProps.theme.slightlyMoreVisibleColour }}>
                     <Text style={{ color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>
-                        {prettyPrintAmount(this.state.amount.remainingAtomic)}{' '}
+                        {prettyPrintAmount(this.state.amount.remainingAtomic, Config)}{' '}
                     </Text>
                     was sent to{' '}
                     <Text style={{ color: this.props.screenProps.theme.primaryColour, fontWeight: 'bold' }}>

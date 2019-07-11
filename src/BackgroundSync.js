@@ -2,13 +2,16 @@
 //
 // Please see the included LICENSE file for more information.
 
-import BackgroundFetch from "react-native-background-fetch";
+import BackgroundFetch from 'react-native-background-fetch';
 
-import { AppState, Platform, NetInfo } from 'react-native';
+import { AppState, Platform } from 'react-native';
+
+import NetInfo from '@react-native-community/netinfo';
 
 import Config from './Config';
 
 import { Globals } from './Globals';
+
 import { saveToDatabase } from './Database';
 
 /* Note: headless/start on boot not enabled, since we don't have the pin
@@ -56,7 +59,7 @@ async function setupBackgroundSync() {
         return false;
     }
 
-    const netInfo = NetInfo.getConnectionInfo();
+    const netInfo = await NetInfo.fetch();
 
     if (Globals.preferences.limitData && netInfo.type === 'cellular') {
         Globals.logger.addLogMessage('[Background Sync] On mobile data. Not starting background sync.');
@@ -130,7 +133,11 @@ export async function backgroundSync() {
                 break;
             }
 
-            await Globals.wallet.internal().sync(false);
+            const syncedBlocks = await Globals.wallet.internal().sync(false);
+
+            if (!syncedBlocks) {
+                break;
+            }
         }
 
         Globals.logger.addLogMessage('[Background Sync] Saving wallet in background.');

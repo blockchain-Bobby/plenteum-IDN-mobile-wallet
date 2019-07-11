@@ -4,8 +4,6 @@
 
 import React from 'react';
 
-import Realm from 'realm';
-
 import TextTicker from 'react-native-text-ticker';
 
 import Entypo from 'react-native-vector-icons/Entypo';
@@ -19,8 +17,10 @@ import SimpleLineIcons from 'react-native-vector-icons/SimpleLineIcons';
 import { deleteUserPinCode } from '@haskkor/react-native-pincode';
 
 import {
-    View, FlatList, Alert, Text, Linking, NetInfo, ScrollView, Platform
+    View, FlatList, Alert, Text, Linking, ScrollView, Platform
 } from 'react-native';
+
+import NetInfo from "@react-native-community/netinfo";
 
 import Config from './Config';
 import ListItem from './ListItem';
@@ -30,7 +30,7 @@ import Constants from './Constants';
 import { Styles } from './Styles';
 import { Globals } from './Globals';
 import { SeedComponent, CopyButton } from './SharedComponents';
-import { setHaveWallet, savePreferencesToDatabase } from './Database';
+import { savePreferencesToDatabase, setHaveWallet } from './Database';
 import { navigateWithDisabledBack, toastPopUp, getArrivalTime } from './Utilities';
 
 export class FaqScreen extends React.Component {
@@ -75,7 +75,7 @@ export class FaqScreen extends React.Component {
                     }}>
                         The wallet does support background syncing, however, it may take some time before you notice this.{'\n\n'}
                         Every 15 minutes, a background sync event is fired. (This is a limitation of the mobile platform){'\n\n'}
-                        After that, background syncing will continue for {Platform.OS === 'ios' ? ' 30 seconds' : ' 14 minutes'}, until the next background sync event is fired.{'\n\n'}
+                        After that, background syncing will continue for {Platform.OS === 'ios' ? '30 seconds' : '14 minutes'}, until the next background sync event is fired.{'\n\n'}
                         However, depending upon your phone model, battery, and OS, these background syncs may occur later than expected, or not at all.{'\n\n'}
                         For further information, see{' '}
                         <Text
@@ -227,14 +227,13 @@ export class ExportKeysScreen extends React.Component {
 
     render() {
         const noSeedComponent =
-            <Text style={[Styles.centeredText, {
+            <Text style={{
                 color: this.props.screenProps.theme.primaryColour,
-                marginLeft: 10,
-                marginRight: 10,
+                marginRight: 20,
                 marginTop: 10,
                 marginBottom: 20,
                 fontSize: 16,
-            }]}>
+            }}>
                 Your wallet isn't a mnemonic seed capable wallet. Not to worry though, your
                 private keys will work just as well for restoring your wallet.
             </Text>;
@@ -247,89 +246,95 @@ export class ExportKeysScreen extends React.Component {
             />;
 
         return(
-            <View style={{ justifyContent: 'flex-start', flex: 1, backgroundColor: this.props.screenProps.theme.backgroundColour }}>
-
-                <View style={{
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    marginTop: 60,
-                    marginLeft: 30,
+            <View style={{
+                justifyContent: 'flex-start',
+                flex: 1,
+                backgroundColor: this.props.screenProps.theme.backgroundColour
+            }}>
+                <ScrollView style={{
+                    flex: 1,
                 }}>
-                    <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 25, marginBottom: 10 }}>
-                        Mnemonic Seed:
-                    </Text>
-
-                    {this.state.mnemonicSeed === undefined ? noSeedComponent : seedComponent}
-                </View>
-
-                <View style={{
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    marginTop: 10,
-                    marginLeft: 30,
-                }}>
-                    <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 25, marginBottom: 10 }}>
-                        Private Spend Key:
-                    </Text>
                     <View style={{
-                        marginTop: 10,
-                        marginRight: 30,
-                        borderWidth: 1,
-                        borderColor: this.props.screenProps.theme.primaryColour,
-                        padding: 10,
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
+                        marginTop: 60,
+                        marginLeft: 30,
                     }}>
-                        <Text style={{
-                            fontSize: 12,
-                            color: this.props.screenProps.theme.slightlyMoreVisibleColour,
-                        }}>
-                            {this.state.privateSpendKey}
+                        <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 25, marginBottom: 10 }}>
+                            Mnemonic Seed:
                         </Text>
+
+                        {this.state.mnemonicSeed === undefined ? noSeedComponent : seedComponent}
+                    </View>
+
+                    <View style={{
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
+                        marginTop: 10,
+                        marginLeft: 30,
+                    }}>
+                        <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 25, marginBottom: 10 }}>
+                            Private Spend Key:
+                        </Text>
+                        <View style={{
+                            marginTop: 10,
+                            marginRight: 30,
+                            borderWidth: 1,
+                            borderColor: this.props.screenProps.theme.primaryColour,
+                            padding: 10,
+                        }}>
+                            <Text style={{
+                                fontSize: 12,
+                                color: this.props.screenProps.theme.slightlyMoreVisibleColour,
+                            }}>
+                                {this.state.privateSpendKey}
+                            </Text>
+
+                        </View>
+
+                        <CopyButton
+                            data={this.state.privateSpendKey}
+                            name='Private Spend Key'
+                            style={{ marginLeft: 0 }}
+                            {...this.props}
+                        />
 
                     </View>
 
-                    <CopyButton
-                        data={this.state.privateSpendKey}
-                        name='Private Spend Key'
-                        style={{ marginLeft: 0 }}
-                        {...this.props}
-                    />
-
-                </View>
-
-                <View style={{
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                    marginTop: 10,
-                    marginLeft: 30,
-                }}>
-                    <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 25, marginBottom: 10 }}>
-                        Private View Key:
-                    </Text>
                     <View style={{
+                        alignItems: 'flex-start',
+                        justifyContent: 'flex-start',
                         marginTop: 10,
-                        marginRight: 30,
-                        borderWidth: 1,
-                        borderColor: this.props.screenProps.theme.primaryColour,
-                        padding: 10,
+                        marginLeft: 30,
                     }}>
-                        <Text style={{
-                            fontSize: 12,
-                            color: this.props.screenProps.theme.slightlyMoreVisibleColour,
-                        }}>
-                            {this.state.privateViewKey}
+                        <Text style={{ color: this.props.screenProps.theme.primaryColour, fontSize: 25, marginBottom: 10 }}>
+                            Private View Key:
                         </Text>
+                        <View style={{
+                            marginTop: 10,
+                            marginRight: 30,
+                            borderWidth: 1,
+                            borderColor: this.props.screenProps.theme.primaryColour,
+                            padding: 10,
+                        }}>
+                            <Text style={{
+                                fontSize: 12,
+                                color: this.props.screenProps.theme.slightlyMoreVisibleColour,
+                            }}>
+                                {this.state.privateViewKey}
+                            </Text>
+
+                        </View>
+
+                        <CopyButton
+                            data={this.state.privateViewKey}
+                            name='Private View Key'
+                            style={{ marginLeft: 0 }}
+                            {...this.props}
+                        />
 
                     </View>
-
-                    <CopyButton
-                        data={this.state.privateViewKey}
-                        name='Private View Key'
-                        style={{ marginLeft: 0 }}
-                        {...this.props}
-                    />
-
-                </View>
-
+                </ScrollView>
             </View>
         );
     }
@@ -382,7 +387,7 @@ export class SwapCurrencyScreen extends React.Component {
                                     this.props.navigation.dispatch(navigateWithDisabledBack('Settings'));
 
                                     /* And go back to the main screen. */
-                                    this.props.navigation.navigate('Main');
+                                    this.props.navigation.navigate('Main', { reloadBalance: true } );
                                 }}
                             />
                         )}
@@ -434,13 +439,13 @@ export class SettingsScreen extends React.Component {
                                 },
                                 onClick: () => {
                                     if (Globals.preferences.pinConfirmation) {
-                                        this.props.navigation.dispatch(navigateWithDisabledBack('RequestPin', {
+                                        this.props.navigation.navigate('RequestPin', {
                                             subtitle: 'to backup your keys',
                                             finishFunction: () => {
                                                 this.props.navigation.dispatch(navigateWithDisabledBack('Settings'));
                                                 this.props.navigation.navigate('ExportKeys');
                                             }
-                                        }));
+                                        });
                                     } else {
                                         this.props.navigation.navigate('ExportKeys');
                                     }
@@ -510,7 +515,7 @@ export class SettingsScreen extends React.Component {
                                         limitData: Globals.preferences.limitData,
                                     });
 
-                                    const netInfo = await NetInfo.getConnectionInfo();
+                                    const netInfo = await NetInfo.fetch();
                                     
                                     if (Globals.preferences.limitData && netInfo.type === 'cellular') {
                                         Globals.wallet.stop();
@@ -545,6 +550,7 @@ export class SettingsScreen extends React.Component {
                                        our components */
                                     if (Globals.updateTheme) {
                                         Globals.updateTheme();
+                                        Globals.update();
                                     }
 
                                     toastPopUp(Globals.preferences.theme === 'darkMode' ? 'Dark mode enabled' : 'Light mode enabled');
@@ -563,7 +569,7 @@ export class SettingsScreen extends React.Component {
                                 onClick: () => {
                                     /* Require pin to disable */
                                     if (Globals.preferences.pinConfirmation) {
-                                        this.props.navigation.dispatch(navigateWithDisabledBack('RequestPin', {
+                                        this.props.navigation.navigate('RequestPin', {
                                             subtitle: 'to disable pin confirmation',
                                             finishFunction: () => {
                                                 Globals.preferences.pinConfirmation = !Globals.preferences.pinConfirmation;
@@ -571,8 +577,12 @@ export class SettingsScreen extends React.Component {
                                                 this.props.navigation.navigate('Settings');
 
                                                 savePreferencesToDatabase(Globals.preferences);
+
+                                                this.setState({
+                                                    pinConfirmation: Globals.preferences.pinConfirmation,
+                                                });
                                             }
-                                        }));
+                                        });
                                     } else {
                                         Globals.preferences.pinConfirmation = !Globals.preferences.pinConfirmation;
 
@@ -603,7 +613,7 @@ export class SettingsScreen extends React.Component {
                                 description: 'Leave a rating or send the link to your friends',
                                 icon: {
                                     iconName: Platform.OS === 'ios' ? 'app-store' : 'google-play',
-                                    IconType: Platform.OS === 'ios' ? Entypo : FontAwesome,
+                                    IconType: Entypo,
                                 },
                                 onClick: () => {
                                     const link = Platform.OS === 'ios' ? Config.appStoreLink : Config.googlePlayLink;
@@ -636,6 +646,27 @@ export class SettingsScreen extends React.Component {
                                 },
                             },
                             {
+                                title: 'Resync Wallet',
+                                description: 'Resync wallet from scratch',
+                                icon: {
+                                    iconName: 'ios-refresh',
+                                    IconType: Ionicons,
+                                },
+                                onClick: () => {
+                                    if (Globals.preferences.pinConfirmation) {
+                                        this.props.navigation.navigate('RequestPin', {
+                                            subtitle: 'to resync your wallet',
+                                            finishFunction: () => {
+                                                this.props.navigation.navigate('Settings');
+                                                resetWallet(this.props.navigation);
+                                            }
+                                        });
+                                    } else {
+                                        resetWallet(this.props.navigation);
+                                    }
+                                },
+                            },
+                            {
                                 title: 'Delete Wallet',
                                 description: 'Delete your wallet',
                                 icon: {
@@ -644,13 +675,13 @@ export class SettingsScreen extends React.Component {
                                 },
                                 onClick: () => {
                                     if (Globals.preferences.pinConfirmation) {
-                                        this.props.navigation.dispatch(navigateWithDisabledBack('RequestPin', {
+                                        this.props.navigation.navigate('RequestPin', {
                                             subtitle: 'to delete your wallet',
                                             finishFunction: () => {
                                                 this.props.navigation.navigate('Settings');
                                                 deleteWallet(this.props.navigation)
                                             }
-                                        }));
+                                        });
                                     } else {
                                         deleteWallet(this.props.navigation)
                                     }
@@ -706,25 +737,39 @@ function deleteWallet(navigation) {
         'Are you sure you want to delete your wallet? If your seed is not backed up, your funds will be lost!',
         [
             {text: 'Delete', onPress: () => {
-                /* Disabling saving */
-                clearInterval(Globals.backgroundSaveTimer);
+                (async () => {
+                    /* Disabling saving */
+                    clearInterval(Globals.backgroundSaveTimer);
 
-                /* Delete pin code */
-                deleteUserPinCode();
+                    /* Delete pin code */
+                    deleteUserPinCode();
 
-                /* Delete old wallet */
-                Realm.deleteFile({});
+                    await setHaveWallet(false);
 
-                setHaveWallet(false);
+                    Globals.wallet.stop();
 
-                Globals.wallet.stop();
+                    Globals.reset();
 
-                Globals.reset();
-
-                /* And head back to the wallet choose screen */
-                navigation.navigate('Login');
+                    /* And head back to the wallet choose screen */
+                    navigation.navigate('Login');
+                })();
             }},
             {text: 'Cancel', style: 'cancel'},
         ],
-    )
+    );
+}
+
+function resetWallet(navigation) {
+    Alert.alert(
+        'Resync Wallet?',
+        'Are you sure you want to resync your wallet? This may take a long time.',
+        [
+            {text: 'Resync', onPress: () => {
+                Globals.wallet.rescan();
+                toastPopUp('Wallet resync initiated');
+                navigation.navigate('Main', { reloadBalance: true } );
+            }},
+            {text: 'Cancel', style: 'cancel'},
+        ],
+    );
 }

@@ -10,6 +10,9 @@ import com.dieam.reactnativepushnotification.ReactNativePushNotificationPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.ReactApplication;
+import com.reactnativecommunity.netinfo.NetInfoPackage;
+import com.reactnativecommunity.asyncstorage.AsyncStoragePackage;
+import com.swmansion.rnscreens.RNScreensPackage;
 import io.sentry.RNSentryPackage;
 import com.github.wumke.RNExitApp.RNExitAppPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -37,6 +40,8 @@ import io.realm.react.RealmReactPackage;
 import java.util.Arrays;
 import java.util.List;
 
+import org.pgsqlite.SQLitePluginPackage;
+
 import org.reactnative.camera.RNCameraPackage;
 
 public class MainApplication extends Application implements ReactApplication {
@@ -51,6 +56,9 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new NetInfoPackage(),
+            new AsyncStoragePackage(),
+            new RNScreensPackage(),
             new RNSentryPackage(),
             new RNExitAppPackage(),
             new ReactNativePushNotificationPackage(),
@@ -64,6 +72,7 @@ public class MainApplication extends Application implements ReactApplication {
             new UdpSocketsModule(),
             new RandomBytesPackage(),
             new RNGestureHandlerPackage(),
+            new SQLitePluginPackage(),
             new TurtleCoinPackage()
       );
     }

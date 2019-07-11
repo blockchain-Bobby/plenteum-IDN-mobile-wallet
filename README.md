@@ -1,6 +1,6 @@
 # TonChan - A mobile, native TurtleCoin wallet
 
-![Screenshot](https://i.imgur.com/MbZxkdu.png)
+![Screenshot](https://i.imgur.com/F5LMYKl.png)
 
 ## Setup
 
@@ -30,6 +30,7 @@ First we need to install the Android JDK (Version 8!).
 
 * Ubuntu - `sudo apt-get install default-jdk`
 * Arch Linux - `pacman -S jdk-openjdk`
+* OSX - `brew tap AdoptOpenJDK/openjdk` & `brew cask install adoptopenjdk8`
 
 Next, lets install Android Studio.
 
@@ -44,11 +45,13 @@ Once you have your virtual device setup, you can launch the app itself.
 
 * Run the program:
 
-`react-native run-android`
+`yarn start` (or `yarn start-release`)
 
 If you get an error about 'Unsupported major.minor version', you may need to set JAVA_HOME to point to the correct jdk.
 
 For example, `export JAVA_HOME=/usr/lib/jvm/java-8-openjdk/jre/`
+
+If you get an error about duplicate resources, run `rm -r android/app/src/main/res/drawable-*`
 
 ## Developing
 
@@ -98,8 +101,9 @@ You need to bump the version number in:
 
 * `src/Config.js` - `appVersion`
 * `android/app/build.gradle` - `versionCode` and `versionName`
+* `package.json` - `version` - Not strictly required
 
-### Integrating QR Codes
+### Integrating QR Codes or URIs
 
 TonChan supports two kinds of QR codes.
 
@@ -123,6 +127,8 @@ turtlecoin://TRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvP
 
 This would send `100 TRTL` (10000 in atomic units) to the address `TRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW`, using the name `Starbucks Coffee` (Note the URI encoding), and using a payment ID of `f13adc8ac78eb22ffcee3f82e0e9ffb251dc7dc0600ef599087a89b623ca1402`
 
+You can also just display the URI as a hyperlink. If a user clicks the link, it will open the app, and jump to the confirm screen, just as a QR code would function. (Provided all the fields are given)
+
 ## Running natively on your Android device
 
 Follow [this](https://facebook.github.io/react-native/docs/running-on-device.html) guide.
@@ -144,6 +150,8 @@ If it all works, you can then upload to the play store.
 Note that you need to close the emulator to get the `yarn deploy-android` to install on your mobile.
 
 ## Forking
+
+Start by cloning the latest tagged release. If it's not in a release, it has not been fully tested, and may have bugs.
 
 #### Modifying icon
 
@@ -167,6 +175,10 @@ Run `react-native-rename your-new-project-name` from this directory. (Obviously,
 
 This might confuse the build system. You probably should do this before installing.
 
+#### Building an APK
+
+You will need to set up your signing key, and keystore file. See https://facebook.github.io/react-native/docs/signed-apk-android.html#generating-a-signing-key
+
 #### Config
 
 Edit `src/Config.js`. The fields should be self explanatory. Make sure to recompile.
@@ -179,10 +191,10 @@ Remove the two files `android/sentry.properties` and `ios/sentry.properties`, an
 
 This will run the sentry setup wizard, to setup error reporting for your app.
 
-Then, copy the line of code `Sentry.config('https://8ecf138e1d1e4d558178be3f2b5e1925@sentry.io/1411753').install();` that is shown on the configuration page, and replace with our line in `index.js`.
+Then, copy the line of code `Sentry.config('https://8ecf138e1d1e4d558178be3f2b5e1925@sentry.io/1411753').install();` that is shown on the configuration page, and replace with our line in `src/Sentry.js`.
 
 Your API key will be different, don't just copy the one here.
 
-Finally, replace `Config.coinName === 'TurtleCoin'` with the coin name defined in the config.
+Finally, replace `Config.coinName === 'TurtleCoin'` in `src/Sentry.js` with the coin name defined in the config.
 
 Once you've done that, you can test sentry is working by adding something like `throw new Error('Hello, sentry');` in the mainscreen constructor.
