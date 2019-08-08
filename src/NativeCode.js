@@ -5,12 +5,12 @@
 'use strict';
 
 import { NativeModules } from 'react-native';
-import { TransactionInput } from 'turtlecoin-wallet-backend';
+import { TransactionInput } from 'plenteum-wallet-backend';
 
 export async function generateKeyImage(
     publicEphemeral,
     privateEphemeral) {
-    return NativeModules.TurtleCoin.generateKeyImage(
+    return NativeModules.Plenteum.generateKeyImage(
         publicEphemeral, privateEphemeral,
     );
 }
@@ -19,7 +19,7 @@ export async function deriveSecretKey(
     derivation,
     outputIndex,
     privateSpendKey) {
-    return NativeModules.TurtleCoin.deriveSecretKey(
+    return NativeModules.Plenteum.deriveSecretKey(
         derivation, { outputIndex }, privateSpendKey
     );
 }
@@ -28,7 +28,7 @@ export async function derivePublicKey(
     derivation,
     outputIndex,
     publicSpendKey) {
-    return NativeModules.TurtleCoin.derivePublicKey(
+    return NativeModules.Plenteum.derivePublicKey(
         derivation, { outputIndex }, publicSpendKey
     );
 }
@@ -37,7 +37,7 @@ export async function generateKeyDerivation(
     transactionPublicKey,
     privateViewKey) {
     
-    return await NativeModules.TurtleCoin.generateKeyDerivation(
+    return await NativeModules.Plenteum.generateKeyDerivation(
         transactionPublicKey, privateViewKey,
     );
 }
@@ -48,9 +48,68 @@ export async function generateRingSignatures(
     inputKeys,
     privateKey,
     realIndex) {
-    return NativeModules.TurtleCoin.generateRingSignatures(
+    return NativeModules.Plenteum.generateRingSignatures(
         transactionPrefixHash, keyImage, inputKeys, privateKey, { realIndex }
     );
+}
+
+export async function makePostRequest(endpoint, body) {
+    if (endpoint !== '/getwalletsyncdata') {
+        return this.makeRequest(endpoint, 'POST', body);
+    }
+
+    const {
+        blockCount, blockHashCheckpoints, startHeight, startTimestamp,
+        skipCoinbaseTransactions
+    } = body;
+
+    const protocol = this.sslDetermined ? (this.ssl ? 'https' : 'http') : 'https';
+    const url = `${protocol}://${this.host}:${this.port}/getwalletsyncdata`;
+
+    /* This is being executed within the Daemon module, so we can get access
+       to it's class with `this` */
+    let data = await NativeModules.Plenteum.getWalletSyncData(
+        blockHashCheckpoints,
+        startHeight,
+        startTimestamp,
+        blockCount,
+        skipCoinbaseTransactions,
+        url,
+    );
+
+    if (data.error) {
+        if (this.sslDetermined) {
+            throw new Error(data.error);
+        }
+
+        /* Ssl failed, lets try http */
+        data = await NativeModules.Plenteum.getWalletSyncData(
+            blockHashCheckpoints,
+            startHeight,
+            startTimestamp,
+            blockCount,
+            this.config.scanCoinbaseTransactions,
+            `http://${this.host}:${this.port}/getwalletsyncdata`,
+        );
+
+        if (data.error) {
+            throw new Error(data.error);
+        }
+
+        try {
+            data = JSON.parse(data);
+        } catch (err) {
+            throw new Error(err);
+        }
+    }
+
+    try {
+        data = JSON.parse(data)
+    } catch (err) {
+        throw new Error(err);
+    }
+
+    return data;
 }
 
 export async function processBlockOutputs(
@@ -70,7 +129,7 @@ export async function processBlockOutputs(
         }
     })
 
-    let inputs = await NativeModules.TurtleCoin.processBlockOutputs(
+    let inputs = await NativeModules.Plenteum.processBlockOutputs(
         block, privateViewKey, javaSpendKeys, isViewWallet, 
         processCoinbaseTransactions,
     );

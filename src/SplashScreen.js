@@ -4,7 +4,7 @@
 
 import React from 'react';
 
-import { WalletBackend } from 'turtlecoin-wallet-backend';
+import { WalletBackend } from 'plenteum-wallet-backend';
 
 import { View, Alert } from 'react-native';
 
@@ -13,7 +13,8 @@ import Config from './Config';
 import { Globals } from './Globals';
 import { Spinner } from './Spinner';
 import { FadeView } from './FadeView';
-import { haveWallet, loadFromDatabase } from './Database';
+import { Authenticate } from './Authenticate';
+import { haveWallet, loadWallet } from './Database';
 import { delay, navigateWithDisabledBack } from './Utilities';
 
 function fail(msg) {
@@ -31,10 +32,8 @@ function fail(msg) {
 /**
  * Called once the pin has been correctly been entered
  */
-async function tryLoadWallet(pinCode, navigation) {
+async function tryLoadWallet(navigation) {
     (async () => {
-        Globals.pinCode = pinCode;
-
         /* Wallet already loaded, probably from previous launch, then
            sending app to background. */
         if (Globals.wallet !== undefined) {
@@ -42,8 +41,8 @@ async function tryLoadWallet(pinCode, navigation) {
             return;
         }
 
-        /* Decrypt wallet data from DB */
-        let [walletData, dbError] = await loadFromDatabase(pinCode);
+        /* Load wallet data from DB */
+        let [walletData, dbError] = await loadWallet();
 
         if (dbError) {
             await fail(dbError);
@@ -88,18 +87,17 @@ export class SplashScreen extends React.Component {
 
             /* Get the pin, or show disclaimer then create a wallet if no pin */
             if (hasWallet) {
-                this.props.navigation.dispatch(
-                    navigateWithDisabledBack('RequestPin', {
-                        finishFunction: tryLoadWallet,
-                        subtitle: 'to unlock your wallet',
-                    }),
+                Authenticate(
+                    this.props.navigation,
+                    'to unlock your wallet',
+                    tryLoadWallet,
+                    true
                 );
             } else {
                 this.props.navigation.dispatch(
                     navigateWithDisabledBack('WalletOption'),
                 );
             }
-
         })();
     }
 

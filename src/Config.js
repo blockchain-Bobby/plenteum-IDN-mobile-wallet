@@ -4,9 +4,7 @@
 
 import { Platform } from 'react-native';
 
-import {
-    MixinLimit, MixinLimits, BlockchainCacheApi, ConventionalDaemon
-} from 'turtlecoin-wallet-backend';
+import { MixinLimit, MixinLimits, Daemon } from 'plenteum-wallet-backend';
 
 import {
     derivePublicKey, generateKeyDerivation, generateRingSignatures,
@@ -30,14 +28,14 @@ const Config = {
     walletSaveFrequency: 60 * 1000,
 
     /**
-     * The amount of decimal places your coin has, e.g. TurtleCoin has two
+     * The amount of decimal places your coin has, e.g. Plenteum has eight
      * decimals
      */
     decimalPlaces: 8,
 
     /**
      * The address prefix your coin uses - you can find this in CryptoNoteConfig.h.
-     * In TurtleCoin, this converts to TRTL
+     * In Plenteum, this converts to PLe
      */
     addressPrefix: 18181,
 
@@ -145,16 +143,7 @@ const Config = {
     /**
      * Amount of blocks to request from the daemon at once
      */
-    blocksPerDaemonRequest: 20,
-
-    /**
-     * Max size of a post body response - 500kb
-     * Will decrease the amount of blocks requested from the daemon if this
-     * is exceeded.
-     */
-     /* TODO: Currently doesn't work. React native bug. node-fetch, request,
-      * http/https - all breaks when trying to implement this */
-    maxBodyResponseSize: 1024 * 512,
+    blocksPerDaemonRequest: 100,
 
     /**
      * Unix timestamp of the time your chain was launched.
@@ -164,7 +153,7 @@ const Config = {
      * should be equal to your current block count. If it's significantly different,
      * you can offset your timestamp to fix the discrepancy
      */
-    chainLaunchTimestamp: new Date(1000 * 1513031505),
+    chainLaunchTimestamp: new Date(1000 * 1533106800),
 
     /**
      * Fee to take on all transactions, in percentage
@@ -174,7 +163,7 @@ const Config = {
     /**
      * Address to send dev fee to
      */
-    devFeeAddress: 'TRTLv1E3ThL66fHthRHyzPSDqeUazPA9eBQYkuRnp8svKgvdoecQtqhSRaD59CEuH8XnYsw3YGtw1RWsQSqtHLqUXu4tvk9LryR',
+    devFeeAddress: 'PLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP',
 
     /**
      * Base url for price API
@@ -189,7 +178,7 @@ const Config = {
      * Default daemon to use. Can either be a BlockchainCacheApi(baseURL, SSL),
      * or a ConventionalDaemon(url, port).
      */
-    defaultDaemon: new BlockchainCacheApi('cache-api.pleapps.plenteum.com', true),
+    defaultDaemon: new Daemon('cache.pleapps.plenteum.com', 443),
 
     /**
      * A link to where a bug can be reported for your wallet. Please update
@@ -211,12 +200,12 @@ const Config = {
     /**
      * Displayed in the settings screen
      */
-    appVersion: 'v0.1.1',
+    appVersion: 'v0.2.0',
 
     /**
      * Base URL for us to chuck a hash on the end, and find a transaction
      */
-    explorerBaseURL: 'http://block-explorer.plenteum.com/?hash='
+    explorerBaseURL: 'http://block-explorer.plenteum.com/?hash=',
 
     /**
      * A link to your app on the Apple app store. Currently blank because we
@@ -226,6 +215,7 @@ const Config = {
 
     /**
      * A link to your app on the google play store
+     * Also not released yet, but linking to old wallet
      */
     googlePlayLink: 'https://play.google.com/store/apps/details?id=com.plenteum.wallet',
 };

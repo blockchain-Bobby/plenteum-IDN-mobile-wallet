@@ -4,8 +4,6 @@
 
 import React from 'react';
 
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-
 import { Input } from 'react-native-elements';
 
 import {
@@ -15,7 +13,7 @@ import {
 import {
     importWalletFromSeed, BlockchainCacheApi, WalletBackend, WalletError,
     isValidMnemonic, isValidMnemonicWord,
-} from 'turtlecoin-wallet-backend';
+} from 'plenteum-wallet-backend';
 
 import Config from './Config';
 
@@ -231,8 +229,7 @@ export class ImportSeedScreen extends React.Component {
 
         Globals.wallet = wallet;
 
-        /* Encrypt wallet with pincode in DB */
-        saveToDatabase(Globals.wallet, Globals.pinCode);
+        saveToDatabase(Globals.wallet);
 
         this.props.navigation.navigate('Home');
     }
@@ -373,8 +370,7 @@ export class ImportKeysScreen extends React.Component {
 
         Globals.wallet = wallet;
 
-        /* Encrypt wallet with pincode in DB */
-        saveToDatabase(Globals.wallet, Globals.pinCode);
+        saveToDatabase(Globals.wallet);
 
         this.props.navigation.navigate('Home');
     }

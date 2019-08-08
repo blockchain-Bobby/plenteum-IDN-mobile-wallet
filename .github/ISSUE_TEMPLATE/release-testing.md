@@ -17,6 +17,7 @@ assignees: ''
 - [ ] Import scan height range works
 - [ ] Import scan height month works
 - [ ] Import scan height exact height works
+- [ ] New PIN is prompted for after 'Forgot PIN' deletion
 
 ## General Operation
 
@@ -26,6 +27,10 @@ assignees: ''
 - [ ] Notifications are received when transactions is received in background
 - [ ] Background sync works
 - [ ] Wallet sync process is saved
+- [ ] Can login with fingerprint
+- [ ] Can login with pin
+- [ ] Can login without authentication
+- [ ] Animations are fired on balance recieve, sync completion, refreshing price
 
 ## Transferring
 
@@ -75,29 +80,30 @@ assignees: ''
 - [ ] Reset from timestamp created wallet works
 - [ ] Reset from scan height created wallet works
 - [ ] Reset from scan height of zero works
+- [ ] Swapping auth method works correctly
 
 ## QR codes and URIs
 
 Can handle the following URIs:
 (Since github doesn't allow clickable URIs - https://hackmd.io/SgUw6oF9RLCjwRMnD0jQpQ?view)
-- [ ] `turtlecoin://TRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW?amount=10000&name=Starbucks%20Coffee&paymentid=f13adc8ac78eb22ffcee3f82e0e9ffb251dc7dc0600ef599087a89b623ca1402`
+- [ ] `plenteum://PLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP?amount=10000&name=Starbucks%20Coffee&paymentid=f13adc8ac78eb22ffcee3f82e0e9ffb251dc7dc0600ef599087a89b623ca1402`
 (Address, amount, name, payment ID)
 
-- [ ] `turtlecoin://TRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW`
+- [ ] `plenteum://PLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP`
 (Just address)
 
-- [ ] `turtlecoin://TRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW?amount=10000`
+- [ ] `plenteum://PLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP?amount=10000`
 (Address, amount)
 
-- [ ] `turtlecoin://TRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW?name=Test`
+- [ ] `plenteum://PLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP?name=Test`
 (Address, name)
 
 Can handle the following QR codes:
 
-- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=turtlecoin%3A%2F%2FTRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW%3Famount%3D10000%26name%3DStarbucks%2520Coffee%26paymentid%3Df13adc8ac78eb22ffcee3f82e0e9ffb251dc7dc0600ef599087a89b623ca1402)
+- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=plenteum%3A%2F%2FPLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP%3Famount%3D10000%26name%3DStarbucks%2520Coffee%26paymentid%3Df13adc8ac78eb22ffcee3f82e0e9ffb251dc7dc0600ef599087a89b623ca1402)
 
-- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=turtlecoin%3A%2F%2FTRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW)
+- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=plenteum%3A%2F%2FPLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP)
 
-- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=turtlecoin%3A%2F%2FTRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW%3Famount%3D10000)
+- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=plenteum%3A%2F%2FPLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP%3Famount%3D10000)
 
-- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=turtlecoin%3A%2F%2FTRTLv2Fyavy8CXG8BPEbNeCHFZ1fuDCYCZ3vW5H5LXN4K2M2MHUpTENip9bbavpHvvPwb4NDkBWrNgURAd5DB38FHXWZyoBh4wW%3Fname%3DTest)
+- [ ] ![](https://chart.googleapis.com/chart?cht=qr&chs=256x256&chl=plenteum%3A%2F%2FPLearxtECBsKFLLeX3edPMEk4ncvZGkJQ7FpPyG3ADGtYbFj7FC5ELWXS2B7wRDfjwSqEwZVp7pwjbWCAhmGJp7z94TQzpNUkP%3Fname%3DTest)

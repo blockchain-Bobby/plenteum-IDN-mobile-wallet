@@ -8,7 +8,7 @@ import {
     View, Text, Button, Image,
 } from 'react-native';
 
-import { WalletBackend } from 'turtlecoin-wallet-backend';
+import { WalletBackend } from 'plenteum-wallet-backend';
 
 import Config from './Config';
 
@@ -84,8 +84,8 @@ export class CreateWalletScreen extends React.Component {
         
         Globals.wallet = WalletBackend.createWallet(Config.defaultDaemon, Config);
 
-        /* Encrypt wallet with pincode in DB */
-        saveToDatabase(Globals.wallet, Globals.pinCode);
+        /* Save wallet in DB */
+        saveToDatabase(Globals.wallet);
     };
 
     render() {
